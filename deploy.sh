@@ -7,22 +7,52 @@ set -e
 MANIFEST=manifest.yml
 ###############
 
+unamestr=`uname`
+
+
 ## Cloud Foundry CLI setup ##
-# Get the cloud foundry public key and add the repository
-wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
-echo "deb http://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+if ! hash cf 2>/dev/null; then
+  echo "Installing Cloud Foundry CLI..."
+  if [[ "$unamestr" == 'Darwin' ]]; then
+    brew tap cloudfoundry/tap
+    brew install cf-cli
+  else
+    mkdir -p tmp
+    PATH=$PWD/tmp:$PATH
+    curl -L "https://cli.run.pivotal.io/stable?release=linux64-binary&source=github" | tar -zx -C tmp
+  fi
+fi
 
-# Update the local package index, then install the cf CLI
-sudo apt-get update
-sudo apt-get install cf-cli
+if [ -n $CF_USERNAME ] && [ -n $CF_PASSWORD ]; then
+  cf api $CF_API
+  cf login -u $CF_USERNAME -p $CF_PASSWORD
+fi
+cf target -o $CF_ORGANIZATION -s $CF_SPACE
+#############################
 
-# Login to Cloud Foundry
-cf api $CF_API #Use the cf api command to set the api endpoint
-cf login -u $CF_USERNAME -p $CF_PASSWORD -o $CF_ORGANIZATION -s $CF_SPACE
+
+platform='linux'
+if [[ "$unamestr" == 'Darwin' ]]; then
+  platform='darwin'
+fi
 
 
-# Push app
+## manifest checking ##
+if ! (cf plugins | grep -q antifreeze); then
+  echo "Installing antifreeze..."
+  cf install-plugin -f "https://github.com/odlp/antifreeze/releases/download/v0.3.0/antifreeze-$platform"
+fi
+
+
+## deployment ##
+if ! (cf plugins | grep -q autopilot); then
+  echo "Installing autopilot..."
+  cf install-plugin -f "https://github.com/contraband/autopilot/releases/download/0.0.3/autopilot-$platform"
+fi
+
+echo "Deploying..."
 cf push -f $MANIFEST
 cf apps
+################
 
 echo "DONE"
