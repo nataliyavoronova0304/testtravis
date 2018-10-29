@@ -5,13 +5,10 @@ env:
   # encrypted CF_PASSWORD
   secure: kr+yBuR7P4jSHAo8jzLUNXvpnEqi+yedP7jO/64VLVXSmzuNpSsbKl62cZ6+rULNuYDNQm5/Hg9Pohs4fvO1MEDIjBVZRLScYVE6TH/92q2S5xI8CbPESIL3tFkH5/Ts4hic/HLb96l3k2UXbXO6l5/VGjAHJIF6d7KFuFY+YeBWbSn+AQm/h2gW4+2g5QqAHDDEQa/2olpmXV6VUj/mvzGmntK2TEaikDkQSAaFyfEl/aKcT2oNpxK6xBLobxGU5GjLNsFyCHzJE/BLOg/ArN8LmKoAKWmAzrLBu4RiX8bQwMSCapZJQpAAJKZyLRqAGmTo9koB9kqM3ZHq24lzVsooaS1KcHktuKlaLx+Qvh0JeNjFaJhU/FDLdKxCbf48sBbqILhCueV0zX4JO/j5J3ic/fdEPawc8GOb3WYmQAPQXxvZKgu0a7CUsVhE7MEUyuJWIK6JQg0Nql8Dr7ltfnNE6F2d96rpxxqz1knEzRvh7zg+DO/QIlOqtfFayRuae8aklvC3EnjZqJ2bS/ekuW9wun3CPcWJWifga7buEiUI1qGdkQTdRTY3/p5GKLexn2BlMDWUlMd5FfBcBgavcDS5ySvijrYNgqp3ZKZr5fWehBqrxLTwxioFnxYtqfi8GJABKsUncRvL4ulWC6YXnRritZSGI6sgBHDdjIThM1g=
 
-script:
-- 'if [ $TRAVIS_TEST_RESULT -eq 0 ]; then
- chmod +x ./deploy.sh;
- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
- sudo apt-get -qq update;
- sudo apt-get -qq install g++-4.8;
- sudo ./deploy.sh;
-fi'
- 
-sudo: required
+deploy:
+  provider: script
+  # https://github.com/travis-ci/travis-ci/issues/5538#issuecomment-265956466
+  script: bash deploy.sh
+  skip_cleanup: true
+  on:
+    branch: master
